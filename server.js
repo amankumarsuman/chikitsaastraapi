@@ -1,12 +1,13 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
-
+const cors = require('cors'); // Add this line
 dotenv.config();
 connectDB();
 
 const app = express();
-
+// Use CORS middleware
+app.use(cors()); // Add this line
 app.use(express.json());
 
 app.use('/api/auth', require('./routes/authRoutes'));
