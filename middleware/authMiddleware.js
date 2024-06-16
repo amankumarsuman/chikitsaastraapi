@@ -1,10 +1,46 @@
+// const jwt = require('jsonwebtoken');
+// const User = require('../models/userModel');
+// const dotenv = require('dotenv');
+// dotenv.config();
+
+// const protect = async (req, res, next) => {
+//   let token;
+//   if (
+//     req.headers.authorization &&
+//     req.headers.authorization.startsWith('Bearer')
+//   ) {
+//     try {
+//       token = req.headers.authorization.split(' ')[1];
+//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//       req.user = await User.findById(decoded.id).select('-password');
+//       next();
+//     } catch (error) {
+//       console.error(error);
+//       res.status(401).json({ message: 'Not authorized, token failed' });
+//     }
+//   }
+
+//   if (!token) {
+//     res.status(401).json({ message: 'Not authorized, no token' });
+//   }
+// };
+
+// const admin = (req, res, next) => {
+//   if (req.user && req.user.isAdmin) {
+//     next();
+//   } else {
+//     res.status(401).json({ message: 'Not authorized as an admin' });
+//   }
+// };
+
+// module.exports = { protect, admin };
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
-const dotenv = require('dotenv');
-dotenv.config();
+const Doctor = require('../models/doctorModel');
 
 const protect = async (req, res, next) => {
   let token;
+
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
@@ -12,10 +48,10 @@ const protect = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
       req.user = await User.findById(decoded.id).select('-password');
       next();
     } catch (error) {
-      console.error(error);
       res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }
@@ -33,4 +69,18 @@ const admin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, admin };
+const doctor = async (req, res, next) => {
+  if (req.user) {
+    const doctor = await Doctor.findById(req.user._id);
+    if (doctor) {
+      req.doctor = doctor;
+      next();
+    } else {
+      res.status(401).json({ message: 'Not authorized as a doctor' });
+    }
+  } else {
+    res.status(401).json({ message: 'Not authorized' });
+  }
+};
+
+module.exports = { protect, admin, doctor };
